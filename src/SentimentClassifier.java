@@ -36,8 +36,11 @@ public class SentimentClassifier {
             int count = 0;
             LexicalEntry entry = new LexicalEntry();
             List<Float> entrySent = new ArrayList<Float>();
+            boolean lastCell = false;
+            boolean loop = true;
 
-            while(cellItr.hasNext()) {
+            while(loop) {
+
                 Cell cell = cellItr.next();
                 /*if(count == 0 || count == 43 || count > 105) {    // indici basati sul file .xlsx
                     System.out.print(cell.toString() + "; ");
@@ -50,17 +53,25 @@ public class SentimentClassifier {
                     entry.addSentiment(Float.parseFloat(cell.toString()));
                 }
 
-                // TODO: trovare un modo per fare il sorting di itLeixcon senza stravolgere i sentiments di ciascuna parola
+                // TODO: trovare un modo per fare il sorting di itLexicon senza stravolgere i sentiments di ciascuna parola
                 // TODO: risolvere il problema del salvataggio dell'ultimo sentimento posizionando bene cell.next()
                 count++;
+
+                if(lastCell) {
+                    loop = false;
+                }
+                if(!cellItr.hasNext()) {
+                    lastCell = true;
+                }
             }
 
             engLexicon.add(entry);
             System.out.print(entry.getWord() + "; ");
-            for(int i = 0; i < 8; i++) {
+            for(int i = 0; i < 10; i++) {
                 System.out.print(entry.getSentiment(i) + "; ");
             }
             System.out.println();
+
         }
 
         workbook.close();
