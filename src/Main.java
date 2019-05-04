@@ -10,7 +10,7 @@ import java.io.IOException;
 public class Main {
 
     public static void main(String[] args) {
-        JSONParser parser = new JSONParser();
+        /*JSONParser parser = new JSONParser();
         try {
             Object obj = parser.parse(new FileReader("jsonFiles/FlumeData-1556382859906.json"));
             JSONArray jsonArr = (JSONArray)obj;
@@ -41,6 +41,14 @@ public class Main {
         }
         catch(Exception e) {
             e.printStackTrace();
+        }*/
+
+        try {
+            SentimentClassifier classifier = new SentimentClassifier();
         }
+        catch(IOException e) {
+            e.printStackTrace();
+        }
+
     }
 }

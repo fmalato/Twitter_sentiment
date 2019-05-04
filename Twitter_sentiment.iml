@@ -16,5 +16,60 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="file://$MODULE_DIR$/lib/poi-4.1.0" />
+        </CLASSES>
+        <JAVADOC>
+          <root url="file://$MODULE_DIR$/lib/poi-4.1.0/docs/apidocs/dev" />
+        </JAVADOC>
+        <SOURCES />
+        <jarDirectory url="file://$MODULE_DIR$/lib/poi-4.1.0" recursive="false" />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="file://$MODULE_DIR$/lib/xmlbeans-3.1.0/lib" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file://$MODULE_DIR$/lib/xmlbeans-3.1.0/lib" />
+        </SOURCES>
+        <jarDirectory url="file://$MODULE_DIR$/lib/xmlbeans-3.1.0/lib" recursive="false" />
+        <jarDirectory url="file://$MODULE_DIR$/lib/xmlbeans-3.1.0/lib" recursive="false" type="SOURCES" />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="file://$MODULE_DIR$/lib/commons-collections4-4.3" />
+        </CLASSES>
+        <JAVADOC>
+          <root url="file://$MODULE_DIR$/lib/commons-collections4-4.3/apidocs" />
+        </JAVADOC>
+        <SOURCES>
+          <root url="file://$MODULE_DIR$/lib/commons-collections4-4.3" />
+        </SOURCES>
+        <jarDirectory url="file://$MODULE_DIR$/lib/commons-collections4-4.3" recursive="false" />
+        <jarDirectory url="file://$MODULE_DIR$/lib/commons-collections4-4.3" recursive="false" type="SOURCES" />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="file://$MODULE_DIR$/lib/commons-compress-1.18" />
+        </CLASSES>
+        <JAVADOC>
+          <root url="file://$MODULE_DIR$/lib/commons-compress-1.18/apidocs" />
+        </JAVADOC>
+        <SOURCES>
+          <root url="file://$MODULE_DIR$/lib/commons-compress-1.18" />
+        </SOURCES>
+        <jarDirectory url="file://$MODULE_DIR$/lib/commons-compress-1.18" recursive="false" />
+        <jarDirectory url="file://$MODULE_DIR$/lib/commons-compress-1.18" recursive="false" type="SOURCES" />
+      </library>
+    </orderEntry>
   </component>
 </module>
