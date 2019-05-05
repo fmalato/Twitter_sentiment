@@ -27,19 +27,37 @@ public class Lexicon extends ArrayList {
         this.lexicon.sort(comp);
     }
 
+    public boolean contains(LexicalEntry entry) {
+
+        for(int i = 0; i < this.lexicon.size(); i++) {
+            if((this.lexicon.get(i)).equals(entry)) {
+                return true;
+            }
+        }
+        return false;
+
+    }
+
     public List<LexicalEntry> getLexicon() {
         return this.lexicon;
     }
 
+    // TODO: make this work properly, dude
     public void removeDuplicates() {
 
         Lexicon newLexicon = new Lexicon();
 
+        // Se due parole consecutive sono uguali, le unisco e aggiungo soltanto l'unione
         for (int i = 0; i < this.lexicon.size() - 1; i++) {
-            if (this.lexicon.get(i).equals(this.lexicon.get(i + 1))) {
-                newLexicon.add(this.lexicon.get(i).union(this.lexicon.get(i + 1)));
+            LexicalEntry union = this.lexicon.get(i).union(this.lexicon.get(i + 1));
+            if (this.lexicon.get(i).equals(this.lexicon.get(i + 1)) && !newLexicon.contains(union)) {
+                newLexicon.add(union);
+            }
+            else if(!this.lexicon.get(i).equals(this.lexicon.get(i + 1))) {
+                newLexicon.add(this.lexicon.get(i));
             }
         }
+        // Aggiungo l'ultima parola
         newLexicon.add(this.lexicon.get(this.lexicon.size() - 1));
 
         this.lexicon = newLexicon.getLexicon();

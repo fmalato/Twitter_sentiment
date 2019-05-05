@@ -73,13 +73,11 @@ public class SentimentClassifier {
         itLexicon.removeDuplicates();
 
         for(int i = 0; i < itLexicon.size(); i++) {
-            if(itLexicon.get(i).getWord().equals("poliziotto")) {
-                System.out.print(itLexicon.get(i).getWord() + "; ");
-                for(int j = 0; j < 10; j++) {
-                    System.out.print(itLexicon.get(i).getSentiment(j) + "; ");
-                }
-                System.out.println();
+            System.out.print(itLexicon.get(i).getWord() + "; ");
+            for(int j = 0; j < 10; j++) {
+                System.out.print(itLexicon.get(i).getSentiment(j) + "; ");
             }
+            System.out.println();
         }
 
         workbook.close();
