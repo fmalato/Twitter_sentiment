@@ -13,65 +13,73 @@ import java.util.List;
 
 public class SentimentClassifier {
 
-    private List<LexicalEntry> itLexicon;
-    private List<LexicalEntry> engLexicon;
+    private Lexicon itLexicon;
+    private Lexicon engLexicon;
 
     public SentimentClassifier() throws IOException {
         File lexiconFile = new File("lexicon/NRC-Emotion-Lexicon-v0.92-In105Languages-Nov2017Translations.xlsx");
         FileInputStream fis = new FileInputStream(lexiconFile);
 
-        this.engLexicon = new ArrayList<LexicalEntry>();
+        this.engLexicon = new Lexicon();
+        this.itLexicon = new Lexicon();
 
         XSSFWorkbook workbook = new XSSFWorkbook(fis);
         XSSFSheet sheet = workbook.getSheetAt(0);
 
         Iterator<Row> rowItr = sheet.iterator();
 
-        Row row = rowItr.next();    // La prima riga ha il nome dei campi
+        // La prima riga ha il nome dei campi
+        rowItr.next();
 
+        // Ciclo usato per l'estrazione dei dati necessari
         while(rowItr.hasNext()) {
-            row = rowItr.next();
+            Row row = rowItr.next();
             Iterator<Cell> cellItr = row.cellIterator();
 
             int count = 0;
-            LexicalEntry entry = new LexicalEntry();
-            List<Float> entrySent = new ArrayList<Float>();
-            boolean lastCell = false;
-            boolean loop = true;
+            LexicalEntry engEntry = new LexicalEntry();
+            LexicalEntry itEntry = new LexicalEntry();
 
-            while(loop) {
+            while(cellItr.hasNext()) {
 
                 Cell cell = cellItr.next();
-                /*if(count == 0 || count == 43 || count > 105) {    // indici basati sul file .xlsx
-                    System.out.print(cell.toString() + "; ");
 
-                }*/
                 if(count == 0) {
-                    entry.setWord(cell.toString());
+                    engEntry.setWord(cell.toString());
                 }
-                if(count > 105) {
-                    entry.addSentiment(Float.parseFloat(cell.toString()));
+                if(count == 43) {
+                    itEntry.setWord(cell.toString());
                 }
-
-                // TODO: trovare un modo per fare il sorting di itLexicon senza stravolgere i sentiments di ciascuna parola
-                // TODO: risolvere il problema del salvataggio dell'ultimo sentimento posizionando bene cell.next()
+                if(count > 104) {
+                    engEntry.addSentiment(Float.parseFloat(cell.toString()));
+                    itEntry.addSentiment(Float.parseFloat(cell.toString()));
+                }
                 count++;
-
-                if(lastCell) {
-                    loop = false;
-                }
-                if(!cellItr.hasNext()) {
-                    lastCell = true;
-                }
             }
 
-            engLexicon.add(entry);
-            System.out.print(entry.getWord() + "; ");
+            engLexicon.add(engEntry);
+            itLexicon.add(itEntry);
+            /*System.out.print(itEntry.getWord() + "; ");
             for(int i = 0; i < 10; i++) {
-                System.out.print(entry.getSentiment(i) + "; ");
+                System.out.print(itEntry.getSentiment(i) + "; ");
             }
-            System.out.println();
+            System.out.println();*/
 
+        }
+
+        // Poiché il lessico è basato sull'inglese, bisogna fare il sorting delle altre lingue
+        itLexicon.sort(new LexicalComparator());
+        // A volte capitano termini uguali in italiano per termini diversi in inglese
+        itLexicon.removeDuplicates();
+
+        for(int i = 0; i < itLexicon.size(); i++) {
+            if(itLexicon.get(i).getWord().equals("poliziotto")) {
+                System.out.print(itLexicon.get(i).getWord() + "; ");
+                for(int j = 0; j < 10; j++) {
+                    System.out.print(itLexicon.get(i).getSentiment(j) + "; ");
+                }
+                System.out.println();
+            }
         }
 
         workbook.close();

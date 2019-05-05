@@ -28,6 +28,36 @@ public class LexicalEntry {
 
     }
 
+    public boolean equals(LexicalEntry entry) {
+        return this.getWord().equals(entry.getWord());
+    }
+
+    public LexicalEntry union(LexicalEntry e2) {
+
+        // TODO: handle multiple union (what if there are three or more of the same entry?)
+        LexicalEntry union = new LexicalEntry();
+
+        if(this.equals(e2)) {
+            union.setWord(this.word);
+        }
+        else {
+            union.setWord(e2.getWord());
+        }
+
+        for(int i = 0; i < 10; i++) {
+            float unionSentiment = this.sentiments.get(i) + e2.getSentiment(i);
+            if(unionSentiment >= 1.0) {
+                unionSentiment = (float)1.0;
+            }
+            else {
+                unionSentiment = (float)0.0;
+            }
+            union.addSentiment(unionSentiment);
+        }
+
+        return union;
+    }
+
     public String getWord() {
         return this.word;
     }
