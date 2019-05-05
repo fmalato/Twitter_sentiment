@@ -85,4 +85,24 @@ public class SentimentClassifier {
 
     }
 
+    public float parseString(String s) {
+
+        // Suddivide la frase in parole ed elimina eventuale punteggiatura
+        String[] words = s.split("\\s+");
+        for (int i = 0; i < words.length; i++) {
+            words[i] = words[i].replaceAll("[^\\w]", "");
+        }
+
+        float score = 0;
+        for(String element : words) {
+            int index = this.itLexicon.binarySearch(element);
+            if(index != -1) {
+                score = this.itLexicon.get(index).getScore();
+            }
+        }
+
+        return score;
+
+    }
+
 }

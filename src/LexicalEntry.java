@@ -58,6 +58,16 @@ public class LexicalEntry {
         return union;
     }
 
+    public float getScore() {
+
+        float score = 0;
+        for(int i = 0; i < sentiments.size(); i++) {
+            score += sentiments.get(i);
+        }
+        return score;
+
+    }
+
     public String getWord() {
         return this.word;
     }
@@ -73,4 +83,5 @@ public class LexicalEntry {
     public void addSentiment(Float sentiment) {
         this.sentiments.add(sentiment);
     }
+
 }

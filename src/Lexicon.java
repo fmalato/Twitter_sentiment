@@ -64,4 +64,24 @@ public class Lexicon extends ArrayList {
 
     }
 
+    public int binarySearch(String x) {
+        int low = 0;
+        int high = this.lexicon.size() - 1;
+        int mid;
+
+        while (low <= high) {
+            mid = (low + high) / 2;
+
+            if (this.lexicon.get(mid).getWord().compareTo(x) < 0) {
+                low = mid + 1;
+            } else if (this.lexicon.get(mid).getWord().compareTo(x) > 0) {
+                high = mid - 1;
+            } else {
+                return mid;
+            }
+        }
+
+        return -1;
+    }
+
 }
