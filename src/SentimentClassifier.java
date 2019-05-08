@@ -2,10 +2,9 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.ss.usermodel.Row;
+import org.json.simple.JSONObject;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -23,54 +22,73 @@ public class SentimentClassifier {
         this.engLexicon = new Lexicon();
         this.itLexicon = new Lexicon();
 
-        XSSFWorkbook workbook = new XSSFWorkbook(fis);
-        XSSFSheet sheet = workbook.getSheetAt(0);
+        try {
 
-        Iterator<Row> rowItr = sheet.iterator();
+            // TODO: implement file reader and understand file writer
+            FileReader frIt = new FileReader("data/lexicon.json");
 
-        // La prima riga ha il nome dei campi
-        rowItr.next();
+        } catch (FileNotFoundException e) {
 
-        // Ciclo usato per l'estrazione dei dati necessari
-        while(rowItr.hasNext()) {
-            Row row = rowItr.next();
-            Iterator<Cell> cellItr = row.cellIterator();
+            System.out.println("File not found, generating lexicon...");
 
-            int count = 0;
-            LexicalEntry engEntry = new LexicalEntry();
-            LexicalEntry itEntry = new LexicalEntry();
+            XSSFWorkbook workbook = new XSSFWorkbook(fis);
+            XSSFSheet sheet = workbook.getSheetAt(0);
 
-            while(cellItr.hasNext()) {
+            Iterator<Row> rowItr = sheet.iterator();
 
-                Cell cell = cellItr.next();
+            // La prima riga ha il nome dei campi
+            rowItr.next();
 
-                if(count == 0) {
-                    engEntry.setWord(cell.toString());
+            JSONObject jsonRow = new JSONObject();
+
+            // Ciclo usato per l'estrazione dei dati necessari
+            while (rowItr.hasNext()) {
+                Row row = rowItr.next();
+                Iterator<Cell> cellItr = row.cellIterator();
+
+                int count = 0;
+                LexicalEntry engEntry = new LexicalEntry();
+                LexicalEntry itEntry = new LexicalEntry();
+
+                while (cellItr.hasNext()) {
+
+                    Cell cell = cellItr.next();
+
+                    if (count == 0) {
+                        engEntry.setWord(cell.toString());
+                        jsonRow.put("engWord", cell.toString());
+                    }
+                    if (count == 43) {
+                        itEntry.setWord(cell.toString());
+                        jsonRow.put("itWord", cell.toString());
+                    }
+                    if (count > 104) {
+                        engEntry.addSentiment(Float.parseFloat(cell.toString()));
+                        itEntry.addSentiment(Float.parseFloat(cell.toString()));
+                        jsonRow.put("sentiment", Float.parseFloat(cell.toString()));
+                    }
+                    count++;
+
                 }
-                if(count == 43) {
-                    itEntry.setWord(cell.toString());
+
+                try (FileWriter file = new FileWriter("data/lexicon.json")) {
+
+                    file.write(jsonRow.toJSONString());
+                    file.flush();
+
+                } catch (IOException ex) {
+                    ex.printStackTrace();
                 }
-                if(count > 104) {
-                    engEntry.addSentiment(Float.parseFloat(cell.toString()));
-                    itEntry.addSentiment(Float.parseFloat(cell.toString()));
-                }
-                count++;
+
+                engLexicon.add(engEntry);
+                itLexicon.add(itEntry);
+
             }
 
-            engLexicon.add(engEntry);
-            itLexicon.add(itEntry);
-            /*System.out.print(itEntry.getWord() + "; ");
-            for(int i = 0; i < 10; i++) {
-                System.out.print(itEntry.getSentiment(i) + "; ");
-            }
-            System.out.println();*/
-
-        }
-
-        // Poiché il lessico è basato sull'inglese, bisogna fare il sorting delle altre lingue
-        itLexicon.sort(new LexicalComparator());
-        // A volte capitano termini uguali in italiano per termini diversi in inglese
-        itLexicon.removeDuplicates();
+            // Poiché il lessico è basato sull'inglese, bisogna fare il sorting delle altre lingue
+            itLexicon.sort(new LexicalComparator());
+            // A volte capitano termini uguali in italiano per termini diversi in inglese
+            itLexicon.removeDuplicates();
 
         /*for(int i = 0; i < itLexicon.size(); i++) {
             System.out.print(itLexicon.get(i).getWord() + "; ");
@@ -80,12 +98,13 @@ public class SentimentClassifier {
             System.out.println();
         }*/
 
-        workbook.close();
-        fis.close();
+            workbook.close();
+            fis.close();
 
+        }
     }
 
-    public float parseString(String s) {
+    public float parseString (String s){
 
         // Suddivide la frase in parole ed elimina eventuale punteggiatura
         String[] words = s.split("\\s+");
@@ -94,9 +113,9 @@ public class SentimentClassifier {
         }
 
         float score = 0;
-        for(String element : words) {
+        for (String element : words) {
             int index = this.itLexicon.binarySearch(element);
-            if(index != -1) {
+            if (index != -1) {
                 score += this.itLexicon.get(index).getScore();
             }
         }
