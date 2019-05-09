@@ -1,5 +1,12 @@
-import java.util.ArrayList;
-import java.util.List;
+import javax.swing.text.html.parser.Parser;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.*;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 public class Lexicon extends ArrayList {
 
@@ -9,6 +16,28 @@ public class Lexicon extends ArrayList {
 
         this.lexicon = new ArrayList<LexicalEntry>();
 
+    }
+
+    public Lexicon(FileReader fr) {
+
+        JSONParser jsonParser = new JSONParser();
+        this.lexicon = new ArrayList<LexicalEntry>();
+        try {
+            Object obj = jsonParser.parse(fr);
+            JSONObject jsonArray = (JSONObject)obj;
+            for (Object key : jsonArray.keySet()) {
+                LexicalEntry entry = new LexicalEntry();
+                entry.setWord((String)key);
+                entry.setSentiments((ArrayList<Double>)jsonArray.get(key));
+                this.lexicon.add(entry);
+            }
+        }
+        catch(ParseException e) {
+            e.printStackTrace();
+        }
+        catch(IOException ex) {
+            ex.printStackTrace();
+        }
     }
 
     public void add(LexicalEntry entry) {

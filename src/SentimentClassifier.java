@@ -7,13 +7,14 @@ import org.json.simple.JSONObject;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
+import java.io.File;
 
 
 public class SentimentClassifier {
 
     private Lexicon itLexicon;
     private Lexicon engLexicon;
+    private File file;
 
     public SentimentClassifier() throws IOException {
         File lexiconFile = new File("lexicon/NRC-Emotion-Lexicon-v0.92-In105Languages-Nov2017Translations.xlsx");
@@ -24,8 +25,14 @@ public class SentimentClassifier {
 
         try {
 
-            // TODO: implement file reader and understand file writer
-            FileReader frIt = new FileReader("data/lexicon.json");
+            this.itLexicon = new Lexicon(new FileReader("data/itLexicon.json"));
+            System.out.println("File 'itLexicon.json' found in 'data/', itLexicon generated.");
+            this.engLexicon = new Lexicon(new FileReader("data/engLexicon.json"));
+            System.out.println("File 'engLexicon.json' found in 'data/', engLexicon generated.");
+
+            engLexicon.sort(new LexicalComparator());
+            itLexicon.sort(new LexicalComparator());
+            itLexicon.removeDuplicates();
 
         } catch (FileNotFoundException e) {
 
@@ -39,7 +46,12 @@ public class SentimentClassifier {
             // La prima riga ha il nome dei campi
             rowItr.next();
 
-            JSONObject jsonRow = new JSONObject();
+            JSONObject itJsonRow = new JSONObject();
+            JSONObject engJsonRow = new JSONObject();
+            File itFile = new File("data/itLexicon.json");
+            File engFile = new File("data/engLexicon.json");
+            FileWriter fwIt = new FileWriter(itFile);
+            FileWriter fwEng = new FileWriter(engFile);
 
             // Ciclo usato per l'estrazione dei dati necessari
             while (rowItr.hasNext()) {
@@ -56,47 +68,49 @@ public class SentimentClassifier {
 
                     if (count == 0) {
                         engEntry.setWord(cell.toString());
-                        jsonRow.put("engWord", cell.toString());
                     }
                     if (count == 43) {
                         itEntry.setWord(cell.toString());
-                        jsonRow.put("itWord", cell.toString());
                     }
                     if (count > 104) {
-                        engEntry.addSentiment(Float.parseFloat(cell.toString()));
-                        itEntry.addSentiment(Float.parseFloat(cell.toString()));
-                        jsonRow.put("sentiment", Float.parseFloat(cell.toString()));
+                        engEntry.addSentiment(Double.parseDouble(cell.toString()));
+                        itEntry.addSentiment(Double.parseDouble(cell.toString()));
+                    }
+                    if (count == 114) {
+                        // TODO: fix LexicalEntry cannot be cast to class java.util.ArrayList
+                        if (itJsonRow.containsKey(itEntry.getWord())) {
+                            Object obj = itJsonRow.get(itEntry.getWord());
+                            LexicalEntry e2 = new LexicalEntry(itEntry.getWord(), (ArrayList<Double>)obj);
+                            itJsonRow.put(itEntry.getWord(), itEntry.union(e2));
+                            System.out.println("Evitata ripetizione di " + itEntry.getWord());
+                        }
+                        else {
+                            itJsonRow.put(itEntry.getWord(), itEntry.getSentiments());
+                            engJsonRow.put(engEntry.getWord(), engEntry.getSentiments());
+                        }
                     }
                     count++;
 
                 }
-
-                try (FileWriter file = new FileWriter("data/lexicon.json")) {
-
-                    file.write(jsonRow.toJSONString());
-                    file.flush();
-
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
-
                 engLexicon.add(engEntry);
                 itLexicon.add(itEntry);
+            }
 
+            try {
+
+                fwIt.write(itJsonRow.toJSONString());
+                fwIt.flush();
+                fwEng.write(engJsonRow.toJSONString());
+                fwEng.flush();
+
+            } catch (IOException ex) {
+                ex.printStackTrace();
             }
 
             // Poiché il lessico è basato sull'inglese, bisogna fare il sorting delle altre lingue
             itLexicon.sort(new LexicalComparator());
             // A volte capitano termini uguali in italiano per termini diversi in inglese
             itLexicon.removeDuplicates();
-
-        /*for(int i = 0; i < itLexicon.size(); i++) {
-            System.out.print(itLexicon.get(i).getWord() + "; ");
-            for(int j = 0; j < 10; j++) {
-                System.out.print(itLexicon.get(i).getSentiment(j) + "; ");
-            }
-            System.out.println();
-        }*/
 
             workbook.close();
             fis.close();

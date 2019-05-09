@@ -4,19 +4,19 @@ import java.util.List;
 public class LexicalEntry {
 
     private String word;
-    private List<Float> sentiments;
+    private List<Double> sentiments;
 
     public LexicalEntry() {
 
         this.word = null;
-        this.sentiments = new ArrayList<Float>();
+        this.sentiments = new ArrayList<Double>();
 
     }
 
-    public LexicalEntry(String word, List<Float> sentiments) {
+    public LexicalEntry(String word, List<Double> sentiments) {
 
         this.word = word;
-        this.sentiments = new ArrayList<Float>();
+        this.sentiments = new ArrayList<Double>();
 
         try {
             this.sentiments.addAll(sentiments);
@@ -45,12 +45,12 @@ public class LexicalEntry {
         }
 
         for(int i = 0; i < 10; i++) {
-            float unionSentiment = this.sentiments.get(i) + e2.getSentiment(i);
+            Double unionSentiment = this.sentiments.get(i) + e2.getSentiment(i);
             if(unionSentiment >= 1.0) {
-                unionSentiment = (float)1.0;
+                unionSentiment = (Double)1.0;
             }
             else {
-                unionSentiment = (float)0.0;
+                unionSentiment = (Double)0.0;
             }
             union.addSentiment(unionSentiment);
         }
@@ -58,9 +58,9 @@ public class LexicalEntry {
         return union;
     }
 
-    public float getScore() {
+    public Double getScore() {
 
-        float score = 0;
+        Double score = 0.0;
         for(int i = 0; i < sentiments.size(); i++) {
             score += sentiments.get(i);
         }
@@ -76,12 +76,22 @@ public class LexicalEntry {
         this.word = word;
     }
 
-    public Float getSentiment(int index) {
+    public Double getSentiment(int index) {
         return this.sentiments.get(index);
     }
 
-    public void addSentiment(Float sentiment) {
+    public List<Double> getSentiments() {
+        return this.sentiments;
+    }
+
+    public void addSentiment(Double sentiment) {
         this.sentiments.add(sentiment);
+    }
+
+    public void setSentiments(ArrayList<Double> sentiments) {
+        for(int i = 0; i < sentiments.size(); i++) {
+            this.addSentiment(sentiments.get(i));
+        }
     }
 
 }
