@@ -76,7 +76,6 @@ public class SentimentClassifier {
                         itEntry.addSentiment(Double.parseDouble(cell.toString()));
                     }
                     if (count == 114) {
-                        // TODO: fix LexicalEntry cannot be cast to class java.util.ArrayList
                         if (itJsonRow.containsKey(itEntry.getWord())) {
                             Object obj = itJsonRow.get(itEntry.getWord());
                             LexicalEntry e2 = new LexicalEntry(itEntry.getWord(), (ArrayList<Double>)obj);
