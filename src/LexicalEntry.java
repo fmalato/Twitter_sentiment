@@ -34,7 +34,6 @@ public class LexicalEntry {
 
     public LexicalEntry union(LexicalEntry e2) {
 
-        // TODO: handle multiple union (what if there are three or more of the same entry?)
         LexicalEntry union = new LexicalEntry();
 
         if(this.equals(e2)) {

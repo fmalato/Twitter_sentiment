@@ -71,7 +71,6 @@ public class Lexicon extends ArrayList {
         return this.lexicon;
     }
 
-    // TODO: make this work properly, dude
     public void removeDuplicates() {
 
         Lexicon newLexicon = new Lexicon();

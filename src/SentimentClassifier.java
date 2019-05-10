@@ -14,7 +14,6 @@ public class SentimentClassifier {
 
     private Lexicon itLexicon;
     private Lexicon engLexicon;
-    private File file;
 
     public SentimentClassifier() throws IOException {
         File lexiconFile = new File("lexicon/NRC-Emotion-Lexicon-v0.92-In105Languages-Nov2017Translations.xlsx");
