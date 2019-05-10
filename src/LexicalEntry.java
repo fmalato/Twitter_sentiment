@@ -62,7 +62,12 @@ public class LexicalEntry {
 
         Double score = 0.0;
         for(int i = 0; i < sentiments.size(); i++) {
-            score += sentiments.get(i);
+            if(i == 1 || i == 2 || i == 4 || i == 5 || i == 7) {
+                score += (-1.0) * sentiments.get(i);
+            }
+            else {
+                score += sentiments.get(i);
+            }
         }
         return score;
 

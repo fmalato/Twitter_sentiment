@@ -81,7 +81,7 @@ public class SentimentClassifier {
                         if (itJsonRow.containsKey(itEntry.getWord())) {
                             Object obj = itJsonRow.get(itEntry.getWord());
                             LexicalEntry e2 = new LexicalEntry(itEntry.getWord(), (ArrayList<Double>)obj);
-                            itJsonRow.put(itEntry.getWord(), itEntry.union(e2));
+                            itJsonRow.put(itEntry.getWord(), itEntry.union(e2).getSentiments());
                             System.out.println("Evitata ripetizione di " + itEntry.getWord());
                         }
                         else {
