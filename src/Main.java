@@ -39,8 +39,10 @@ public class Main {
 
         try {
             SentimentClassifier classifier = new SentimentClassifier();
-            float score = classifier.parseString("il poliziotto è coraggioso");
+            float score = classifier.parseString("il poliziotto è coraggioso ma ha un brutto carattere");
+            float scoreEng = classifier.parseString("the police is very drowsy and has a very bad attitude");
             System.out.println(score);
+            System.out.println(scoreEng);
         }
         catch(IOException e) {
             e.printStackTrace();

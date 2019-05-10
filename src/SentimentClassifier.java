@@ -132,6 +132,15 @@ public class SentimentClassifier {
             if (index != -1) {
                 score += this.itLexicon.get(index).getScore();
             }
+            else{
+                int indexEng = this.engLexicon.binarySearch(element);
+                if (indexEng != -1) {
+                    score += this.itLexicon.get(indexEng).getScore();
+                }
+                else {
+                    System.out.println(element + ": not found");
+                }
+            }
         }
 
         return score;
