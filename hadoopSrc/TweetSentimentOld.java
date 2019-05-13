@@ -1,10 +1,37 @@
+/*
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+
+public class Main {
+
+    public static void main(String[] args) {
+        try {
+            SentimentClassifier classifier = new SentimentClassifier();
+            float score = classifier.parseString("Alcune persone sono malvage");
+            System.out.println(score);
+        }c
+        catch(IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+*/
+
 import java.io.IOException;
 import java.util.StringTokenizer;
 import java.util.ArrayList;
 import java.io.FileReader;
 import java.io.FileInputStream;
 
-import org.apache.hadoop.conf.Configured;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
@@ -14,27 +41,14 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.apache.hadoop.util.Tool;
-import org.apache.hadoop.util.ToolRunner;
-
-import static org.apache.hadoop.hbase.util.Bytes.toBytes;
-
-import org.apache.hadoop.hbase.client.Put;
-import org.apache.hadoop.hbase.mapreduce.TableMapReduceUtil;
-import org.apache.hadoop.hbase.mapreduce.TableReducer;
-import org.apache.hadoop.hbase.util.Bytes;
-import org.apache.hadoop.hbase.HBaseConfiguration;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+public class TweetSentiment {
 
-public class TweetSentiment extends Configured implements Tool {
-
-    private static final String OUTPUT_TABLE = "sentiment";
-
-    public static Double getScore(ArrayList<Double> sentiments) {
+	public static Double getScore(ArrayList<Double> sentiments) {
 
         Double score = 0.0;
         for(int i = 0; i < sentiments.size(); i++) {
@@ -111,7 +125,7 @@ public class TweetSentiment extends Configured implements Tool {
             }
         }
 
-    public static class ClassificationCounterReducer extends TableReducer<IntWritable,IntWritable,IntWritable> {
+    public static class ClassificationCounterReducer extends Reducer<IntWritable,IntWritable,IntWritable,IntWritable> {
 
         private IntWritable result = new IntWritable();
 
@@ -121,44 +135,25 @@ public class TweetSentiment extends Configured implements Tool {
             for (IntWritable val : values) {
                 sum += val.get();
             }
-
-            Put put = new Put(Bytes.toBytes(classification.toString()));
-
-            put.add( Bytes.toBytes("number"), Bytes.toBytes(""), Bytes.toBytes(sum) );
-
             result.set(sum);
-            context.write(null, put);
+            context.write(classification, result);
         }
     }
 
-    public int run(String[] args) throws Exception  {
+    public static void main(String[] args) throws Exception {
+        Configuration conf = new Configuration();
 
-        Job job = Job.getInstance(getConf(), "Sentiment Count");
-
+        Job job = Job.getInstance(conf, "Sentiment Count");
         job.setJarByClass(TweetSentiment.class);
         job.setMapperClass(ClassificatorMapper.class);
         job.setCombinerClass(ClassificationCounterReducer.class);
         job.setReducerClass(ClassificationCounterReducer.class);
-
-        TableMapReduceUtil.initTableReducerJob(
-                OUTPUT_TABLE,
-                TweetSentiment.ClassificationCounterReducer.class,
-                job);
-
         job.setOutputKeyClass(IntWritable.class);
         job.setOutputValueClass(IntWritable.class);
-
         FileInputFormat.addInputPath(job, new Path(args[0]));
         FileOutputFormat.setOutputPath(job, new Path(args[1]));
-
         System.exit(job.waitForCompletion(true) ? 0 : 1);
     }
-
-    public static void main(String[] args) throws Exception {
-        int res = ToolRunner.run(new Configuration(), new TweetSentiment(), args);
-        System.exit(res);
-    }
-
 }
 
 
