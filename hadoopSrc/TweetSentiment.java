@@ -23,6 +23,7 @@ import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.mapreduce.TableMapReduceUtil;
 import org.apache.hadoop.hbase.mapreduce.TableReducer;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 
 import org.json.simple.JSONObject;
@@ -84,10 +85,8 @@ public class TweetSentiment extends Configured implements Tool {
         private Text word = new Text();
         private JSONParser parser = new JSONParser();
         private String tweetText = null;
-    
 
-        public void map(Object key, Text value, Context context
-        ) throws IOException, InterruptedException {
+        public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
         			
             try {
                 JSONObject jsonObj = (JSONObject) parser.parse(value.toString());
@@ -111,9 +110,9 @@ public class TweetSentiment extends Configured implements Tool {
             }
         }
 
-    public static class ClassificationCounterReducer extends TableReducer<IntWritable,IntWritable,IntWritable> {
+    public static class ClassificationCounterReducer extends TableReducer<IntWritable,IntWritable,ImmutableBytesWritable> {
 
-        private IntWritable result = new IntWritable();
+        //private IntWritable result = new IntWritable();
 
         public void reduce(IntWritable classification, Iterable<IntWritable> values, Context context)
                 throws IOException, InterruptedException {
@@ -124,9 +123,10 @@ public class TweetSentiment extends Configured implements Tool {
 
             Put put = new Put(Bytes.toBytes(classification.toString()));
 
-            put.add( Bytes.toBytes("number"), Bytes.toBytes(""), Bytes.toBytes(sum) );
+            put.addColumn( Bytes.toBytes("number"), Bytes.toBytes(""), Bytes.toBytes(sum) );
 
-            result.set(sum);
+            //result.set(sum);
+            //context.write(classification, result);
             context.write(null, put);
         }
     }
@@ -145,23 +145,23 @@ public class TweetSentiment extends Configured implements Tool {
                 TweetSentiment.ClassificationCounterReducer.class,
                 job);
 
+        job.setMapOutputKeyClass(IntWritable.class);
+        job.setMapOutputValueClass(IntWritable.class);
+
         job.setOutputKeyClass(IntWritable.class);
-        job.setOutputValueClass(IntWritable.class);
+        job.setOutputValueClass(ImmutableBytesWritable.class);
 
         FileInputFormat.addInputPath(job, new Path(args[0]));
-        FileOutputFormat.setOutputPath(job, new Path(args[1]));
+        //FileOutputFormat.setOutputPath(job, new Path(args[1]));
 
         System.exit(job.waitForCompletion(true) ? 0 : 1);
+
+        return 0;
     }
 
     public static void main(String[] args) throws Exception {
-        int res = ToolRunner.run(new Configuration(), new TweetSentiment(), args);
+        int res = ToolRunner.run(new HBaseConfiguration(), new TweetSentiment(), args);
         System.exit(res);
     }
 
 }
-
-
-
-
-
