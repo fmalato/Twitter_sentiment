@@ -9,6 +9,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
@@ -32,8 +33,6 @@ import org.json.simple.parser.ParseException;
 
 
 public class TweetSentiment extends Configured implements Tool {
-
-    private static final String OUTPUT_TABLE = "sentiment";
 
     public static Double getScore(ArrayList<Double> sentiments) {
 
@@ -110,9 +109,7 @@ public class TweetSentiment extends Configured implements Tool {
             }
         }
 
-    public static class ClassificationCounterReducer extends TableReducer<IntWritable,IntWritable,ImmutableBytesWritable> {
-
-        //private IntWritable result = new IntWritable();
+    public static class ClassificationCounterReducer extends TableReducer<IntWritable,IntWritable,IntWritable> {
 
         public void reduce(IntWritable classification, Iterable<IntWritable> values, Context context)
                 throws IOException, InterruptedException {
@@ -123,13 +120,15 @@ public class TweetSentiment extends Configured implements Tool {
 
             Put put = new Put(Bytes.toBytes(classification.toString()));
 
-            put.addColumn( Bytes.toBytes("number"), Bytes.toBytes(""), Bytes.toBytes(sum) );
+            String result = Integer.toString(sum);
 
-            //result.set(sum);
-            //context.write(classification, result);
-            context.write(null, put);
+            put.addColumn( Bytes.toBytes("number"), Bytes.toBytes(""), Bytes.toBytes(result) );
+
+            context.write(classification, put);
         }
     }
+
+    private static final String OUTPUT_TABLE = "sentiment";
 
     public int run(String[] args) throws Exception  {
 
@@ -137,7 +136,7 @@ public class TweetSentiment extends Configured implements Tool {
 
         job.setJarByClass(TweetSentiment.class);
         job.setMapperClass(ClassificatorMapper.class);
-        job.setCombinerClass(ClassificationCounterReducer.class);
+        //job.setCombinerClass(ClassificationCounterReducer.class);
         job.setReducerClass(ClassificationCounterReducer.class);
 
         TableMapReduceUtil.initTableReducerJob(
@@ -148,11 +147,7 @@ public class TweetSentiment extends Configured implements Tool {
         job.setMapOutputKeyClass(IntWritable.class);
         job.setMapOutputValueClass(IntWritable.class);
 
-        job.setOutputKeyClass(IntWritable.class);
-        job.setOutputValueClass(ImmutableBytesWritable.class);
-
         FileInputFormat.addInputPath(job, new Path(args[0]));
-        //FileOutputFormat.setOutputPath(job, new Path(args[1]));
 
         System.exit(job.waitForCompletion(true) ? 0 : 1);
 
