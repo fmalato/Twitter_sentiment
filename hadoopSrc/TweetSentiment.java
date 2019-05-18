@@ -3,6 +3,10 @@ import java.util.StringTokenizer;
 import java.util.ArrayList;
 import java.io.FileReader;
 import java.io.FileInputStream;
+import java.util.Date;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+
 
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.conf.Configuration;
@@ -26,6 +30,10 @@ import org.apache.hadoop.hbase.mapreduce.TableReducer;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.HColumnDescriptor;
+import org.apache.hadoop.hbase.HTableDescriptor;
+import org.apache.hadoop.hbase.client.HBaseAdmin;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -77,7 +85,7 @@ public class TweetSentiment extends Configured implements Tool {
     }
 
 
-    public static class ClassificatorMapper extends Mapper<Object, Text, IntWritable, IntWritable> {
+    public static class ClassificatorMapper extends Mapper<Object, Text, Text, IntWritable> {
 
         private int score = 0;
 
@@ -103,15 +111,27 @@ public class TweetSentiment extends Configured implements Tool {
 				} catch (Exception e) { 
             	e.printStackTrace();
             }
+
+            Text classification = new Text("Neutral");
+
+            if (score > 0 && score < 3)
+                classification = new Text("Positive");
+            if (score >= 3)
+                classification = new Text("Very Positive");
+
+            if (score < 0 && score > -3)
+                classification = new Text("Negative");
+            if (score <= -3)
+                classification = new Text("Very Negative");
             
-            context.write(new IntWritable(score), new IntWritable(1));
+            context.write(classification, new IntWritable(1));
             
             }
         }
 
-    public static class ClassificationCounterReducer extends TableReducer<IntWritable,IntWritable,IntWritable> {
+    public static class ClassificationCounterReducer extends TableReducer<Text,IntWritable,Text> {
 
-        public void reduce(IntWritable classification, Iterable<IntWritable> values, Context context)
+        public void reduce(Text classification, Iterable<IntWritable> values, Context context)
                 throws IOException, InterruptedException {
             int sum = 0;
             for (IntWritable val : values) {
@@ -122,13 +142,13 @@ public class TweetSentiment extends Configured implements Tool {
 
             String result = Integer.toString(sum);
 
-            put.addColumn( Bytes.toBytes("number"), Bytes.toBytes(""), Bytes.toBytes(result) );
+            put.addColumn( Bytes.toBytes("number"), Bytes.toBytes("value"), Bytes.toBytes(result) );
 
             context.write(classification, put);
         }
     }
 
-    private static final String OUTPUT_TABLE = "sentiment";
+    private static String OUTPUT_TABLE = "sentiment";
 
     public int run(String[] args) throws Exception  {
 
@@ -139,12 +159,25 @@ public class TweetSentiment extends Configured implements Tool {
         //job.setCombinerClass(ClassificationCounterReducer.class);
         job.setReducerClass(ClassificationCounterReducer.class);
 
+        DateFormat dateFormat = new SimpleDateFormat("yyyy_MM_dd_HH");
+        Date date = new Date();
+        String now = dateFormat.format(date);
+
+        HBaseAdmin admin = new HBaseAdmin(getConf());
+
+        HTableDescriptor tableDescriptor = new HTableDescriptor(TableName.valueOf(OUTPUT_TABLE + "_" + now));
+
+        tableDescriptor.addFamily(new HColumnDescriptor("number"));
+
+        if (!admin.tableExists(TableName.valueOf(OUTPUT_TABLE + "_" + now)))
+            admin.createTable(tableDescriptor);
+
         TableMapReduceUtil.initTableReducerJob(
-                OUTPUT_TABLE,
+                OUTPUT_TABLE + "_" + now,
                 TweetSentiment.ClassificationCounterReducer.class,
                 job);
 
-        job.setMapOutputKeyClass(IntWritable.class);
+        job.setMapOutputKeyClass(Text.class);
         job.setMapOutputValueClass(IntWritable.class);
 
         FileInputFormat.addInputPath(job, new Path(args[0]));
