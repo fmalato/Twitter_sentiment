@@ -69,6 +69,8 @@ public class TweetSentiment extends Configured implements Tool {
 
         // Suddivide la frase in parole ed elimina eventuale punteggiatura
 
+        boolean thereIsQuery = false;
+
         String[] words = s.split("\\s+");
         for (int i = 0; i < words.length; i++) {
             words[i] = words[i].replaceAll("[^\\w]", "");
@@ -76,13 +78,15 @@ public class TweetSentiment extends Configured implements Tool {
             logt.info("Confronto: " + words[i] + " con " + QUERY);
 
             if (words[i].equalsIgnoreCase(QUERY)) {
-                THEREISQUERY = true;
+                thereIsQuery = true;
                 logt.info("Ho trovato una parola ");
             }
         }
-
-        if (THEREISQUERY == false)
-            return 0;
+        
+        // 1405 e' un valore che un tweet non potra' mai assumere, quindi lo uso come sentinella per dire 
+        // che quel tweet non contiene la query
+        if (thereIsQuery == false)
+            return 1405;
 
         float score = 0;
         ArrayList<Double> sentiments = null;
@@ -135,7 +139,7 @@ public class TweetSentiment extends Configured implements Tool {
 
             if (score > 0 && score < 3)
                 classification = new Text("Positive");
-            if (score >= 3)
+            if (score >= 3 && score != 1405)
                 classification = new Text("VeryPositive");
 
             if (score < 0 && score > -3)
@@ -143,12 +147,10 @@ public class TweetSentiment extends Configured implements Tool {
             if (score <= -3)
                 classification = new Text("VeryNegative");
             
-            if (THEREISQUERY == true) {
+            if (score != 1405) {
                 logm.info("classificazione " + classification +  " 1");
                 context.write(classification, new IntWritable(1));
-                THEREISQUERY = false;
-            }
-            else {
+            } else {
                 context.write(classification, new IntWritable(0));
             }
         }
@@ -157,7 +159,6 @@ public class TweetSentiment extends Configured implements Tool {
     public static class ClassificationCounterReducer extends TableReducer<Text,IntWritable,Text> {
 
         public static final Log log = LogFactory.getLog(ClassificationCounterReducer.class);
-
         
         private HTable hTable;
         protected void setup(Context context) throws IOException, InterruptedException {
@@ -169,7 +170,6 @@ public class TweetSentiment extends Configured implements Tool {
             }
         }   
         
-
         public void reduce(Text classification, Iterable<IntWritable> values, Context context)
                 throws IOException, InterruptedException {
             int sum = 0;
@@ -183,11 +183,11 @@ public class TweetSentiment extends Configured implements Tool {
 
             byte [] oldByteValue = resultTable.getValue(Bytes.toBytes("number"),Bytes.toBytes("value"));
             
-            int oldValue = Integer.parseInt(Bytes.toString(oldByteValue));
-
-            log.info("Valore somma " + sum + " " + oldValue);
-
-            sum += oldValue;
+            if (Bytes.toString(oldByteValue) != null) {
+                int oldValue = Integer.parseInt(Bytes.toString(oldByteValue));
+                log.info("Valore somma " + sum + " " + oldValue);
+                sum += oldValue;
+            }
 
             Put put = new Put(Bytes.toBytes(classification.toString()));
             String result = Integer.toString(sum);
@@ -199,11 +199,8 @@ public class TweetSentiment extends Configured implements Tool {
         
     }
 
-    private static String OUTPUT_TABLE = "sentiment";
     private static String QUERY;
-    private static boolean THEREISQUERY = false;
     private static Configuration configuration;
-    //private static HTable hTable;
 
     public int run(String[] args) throws Exception  {
 
@@ -216,12 +213,7 @@ public class TweetSentiment extends Configured implements Tool {
 
         job.setJarByClass(TweetSentiment.class);
         job.setMapperClass(ClassificatorMapper.class);
-        //job.setCombinerClass(ClassificationCounterReducer.class);
         job.setReducerClass(ClassificationCounterReducer.class);
-
-        DateFormat dateFormat = new SimpleDateFormat("yyyy_MM_dd_HH");
-        Date date = new Date();
-        String now = dateFormat.format(date);
 
         HBaseAdmin admin = new HBaseAdmin(getConf());
 
@@ -232,8 +224,6 @@ public class TweetSentiment extends Configured implements Tool {
         if (!admin.tableExists(TableName.valueOf(QUERY)))
            admin.createTable(tableDescriptor);
         
-        //hTable = new HTable(getConf(), QUERY);
-
         TableMapReduceUtil.initTableReducerJob(
             QUERY,
             TweetSentiment.ClassificationCounterReducer.class,
